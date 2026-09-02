@@ -1,0 +1,16 @@
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+env
+.env
+.git
+.gitignore
+
+# Игнорируем локальный кэш Python (он не должен попадать в контейнер)
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.htmlcov/
