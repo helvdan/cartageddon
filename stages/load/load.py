@@ -4,7 +4,7 @@ from typing import Dict, List
 import psycopg
 
 from artifacts import ParquetArtifact
-from common import PipelineContext
+from common import RunTimeContext
 from schema import get_pg_table_name, get_pg_columns, SCHEMAS
 from stages.base import Stage
 
@@ -15,12 +15,12 @@ class LoadStage(Stage):
     name = "LOAD"
     logger = logging.getLogger(name)
 
-    def __init__(self, context: PipelineContext):
-        self.context = context
+    def __init__(self, context: RunTimeContext):
+        self.global_context = context
         # Формируем строку подключения (psycopg3 принимает как URI, так и keyword-строку)
         self.conn_info = (
-            f"user={self.context.pg_user} password={self.context.pg_password} "
-            f"host={self.context.pg_host} port={self.context.pg_port} dbname={self.context.pg_database}"
+            f"user={self.global_context.pg_user} password={self.global_context.pg_password} "
+            f"host={self.global_context.pg_host} port={self.global_context.pg_port} dbname={self.global_context.pg_database}"
         )
         super().__init__(context)
 
@@ -49,7 +49,7 @@ class LoadStage(Stage):
                 pg_columns_str = ", ".join(pg_cols)
                 copy_query = f"COPY {pg_table_name} ({pg_columns_str}) FROM STDIN WITH (FORMAT CSV, NULL '')"
 
-                for binary_buffer in artifact.get_data_chunks(chunk_size=self.context.chunk_size):
+                for binary_buffer in artifact.get_data_chunks(chunk_size=self.global_context.chunk_size):
                     try:
                         # Открываем курсор для конкретной операции COPY
                         with conn.cursor() as cur:
@@ -67,10 +67,10 @@ class LoadStage(Stage):
 
 
 if __name__ == '__main__':
-    from pipeline import PipelineContext
+    from pipeline import RunTimeContext
     from pathlib import Path
 
-    context = PipelineContext(
+    context = RunTimeContext(
         work_dir="/tmp",
         chunk_size=5000,
         pg_user="django_user",

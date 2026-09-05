@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Type
 
 from artifacts import Artifact
+from common import RunTimeContext, StageContext
 
 
 class Stage(ABC):
@@ -15,11 +16,15 @@ class Stage(ABC):
         """Каждый наследник обязан вернуть конкретный класс артефакта."""
         pass
 
-    def __init__(self, context: 'PipelineContext') -> None:
-        self.context = context
+    def __init__(self, context: RunTimeContext) -> None:
+        self.global_context = context
 
-    def _create_artifact(self, oc_table_name: str) -> Artifact:
+    def _get_path(self, oc_table_name) -> Path:
+        return Path(f"{self.global_context.work_dir}/{oc_table_name}.{self.postfix}.{self.artifact_cls.extension}")
+
+    def create_artifact(self, oc_table_name: str) -> Artifact:
         path = self._get_path(oc_table_name)
+        self.logger.debug(f"Создан артефакт {path}")
         return self.artifact_cls(path=path)
 
     @property
@@ -34,14 +39,14 @@ class Stage(ABC):
         """Имя стадии для сопоставления с аргументами CLI."""
         pass
 
+    def get_local_context(self) -> StageContext:
+        return getattr(self.global_context, self.name)
+
     def clean_previous_data(self) -> Any:
         """Очистить данные предыдущего запуска."""
-        d = Path(self.context.work_dir)
+        d = Path(self.global_context.work_dir)
         for p in d.glob(f"*.{self.postfix}.pkl"):
             p.unlink()
-
-    def _get_path(self, oc_table_name) -> Path:
-        return Path(f"{self.context.work_dir}/{oc_table_name}.{self.postfix}.{self.artifact_cls.extension}")
 
     def transform(self, artifact: Artifact) -> Tuple:
         pass

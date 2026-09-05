@@ -10,7 +10,7 @@ from stages.normalize.rules import get_callback
 
 class NormalizeValuesStage(Stage):
     artifact_cls = ParquetArtifact
-    name = "normalize_values"
+    name = "NORMALIZE"
     postfix = "normalized"
     logger = logging.getLogger(name)
 
@@ -40,10 +40,10 @@ class NormalizeValuesStage(Stage):
 
 
 if __name__ == '__main__':
-    from pipeline import PipelineContext
+    from pipeline import RunTimeContext
     from artifacts import PickleArtifact, ParquetArtifact
 
-    ctx = PipelineContext(
+    ctx = RunTimeContext(
         work_dir="/tmp"
     )
 

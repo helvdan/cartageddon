@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from artifacts import ParquetArtifact
-from common import PipelineContext
+from common import RunTimeContext
 from stages.base import Stage
 
 
@@ -14,7 +14,7 @@ class JoinTablesStage(Stage):
     postfix = "joined"
     logger = logging.getLogger(name)
 
-    def __init__(self, context: PipelineContext) -> None:
+    def __init__(self, context: RunTimeContext) -> None:
         self.tables_to_join = {}
         if context.single_language:
             self.tables_to_join["oc_product"] = ("oc_product_description",)
@@ -54,14 +54,14 @@ class JoinTablesStage(Stage):
     def _create_joined_artifact(self, oc_table_name: str, dependent_tables: List[str]) -> ParquetArtifact:
         joined_part = ".".join(dependent_tables)
         filename = f"{oc_table_name}.{joined_part}.{self.postfix}.{self.artifact_cls.extension}"
-        path = Path(self.context.work_dir) / filename
+        path = Path(self.global_context.work_dir) / filename
         return ParquetArtifact(path=path)
 
 
 if __name__ == '__main__':
     from artifacts import ParquetArtifact
 
-    ctx = PipelineContext(
+    ctx = RunTimeContext(
         work_dir="/tmp",
         single_language=True
     )

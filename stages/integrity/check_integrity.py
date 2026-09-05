@@ -15,7 +15,7 @@ class CheckIntegrityStage(Stage):
     logger = logging.getLogger(name)
 
     def _get_path_deleted(self, oc_table_name) -> Path:
-        return Path(f"{self.context.work_dir}/{oc_table_name}.{self.postfix}.deleted.{self.artifact_cls.extension}")
+        return Path(f"{self.global_context.work_dir}/{oc_table_name}.{self.postfix}.deleted.{self.artifact_cls.extension}")
 
     def run(self, artifacts: Dict[str, ParquetArtifact]) -> Dict[str, ParquetArtifact]:
         result_artifacts = artifacts.copy()
@@ -57,9 +57,9 @@ class CheckIntegrityStage(Stage):
 
 
 if __name__ == '__main__':
-    from common import PipelineContext
+    from common import RunTimeContext
 
-    ctx = PipelineContext(
+    ctx = RunTimeContext(
         work_dir="/tmp"
     )
 

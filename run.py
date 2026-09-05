@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 
-from common import PipelineContext
+from common import RunTimeContext
 from pipeline import Pipeline
 from schema import SCHEMAS
 from stages import (
@@ -165,7 +165,7 @@ def transform():
         active_stages.add(JoinTablesStage.name)
 
     # Запуск пайплайна
-    context = PipelineContext(
+    context = RunTimeContext(
         work_dir=args.work_dir,
         single_language=args.single_language,
         chunk_size=int(args.chunk_size),

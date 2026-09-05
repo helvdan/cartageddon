@@ -3,7 +3,7 @@ from typing import Optional, List
 
 
 @dataclass(frozen=True, kw_only=True)
-class PipelineContext:
+class RunTimeContext:
     # общие настройки
     work_dir: str
     tables: Optional[List[str]] = None

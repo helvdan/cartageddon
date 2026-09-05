@@ -35,9 +35,9 @@ class DeduplicateStage(Stage):
 
 
 if __name__ == '__main__':
-    from common import PipelineContext
+    from common import RunTimeContext
 
-    ctx = PipelineContext(
+    ctx = RunTimeContext(
         work_dir="/tmp",
     )
     dedup_stage = DeduplicateStage(ctx)
