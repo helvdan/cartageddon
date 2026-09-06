@@ -2,6 +2,9 @@
 COMPOSE_DIR = sample
 CLI_CONTAINER = etl_cli
 SCRIPT_NAME = run.py
+VENV = .env
+PYTHON_BIN ?= python3
+PIP = $(VENV)/bin/pip
 
 .PHONY: up down restart build logs shell migrate mysql-check
 
@@ -47,3 +50,10 @@ pg-clean:
 	public.catalog_weightclass, \
 	public.catalog_lengthclass \
 	RESTART IDENTITY CASCADE;"'
+
+create-env:
+	@echo "Creating virtual environment..."
+	$(PYTHON_BIN) -m venv $(VENV)
+	@echo "Upgrading pip and installing requirements..."
+	$(PIP) install --upgrade pip
+	$(PIP) install -r $(COMPOSE_DIR)/requirements.txt

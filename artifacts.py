@@ -2,12 +2,15 @@ import io
 import pickle
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Optional, Iterable, Set, Generator
+from typing import Any, Optional, Iterable, Set, Generator, List, Dict
 
+import logging
 import polars as pl
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
+
+logger = logging.getLogger("ARTIFACT")
 
 
 class Artifact:
@@ -28,6 +31,7 @@ class Artifact:
         gc.collect()
 
         self.path.unlink()
+        logger.debug(f"Артефакт удалён: {self.path}")
 
     @property
     def exists(self) -> bool:
@@ -135,6 +139,28 @@ class ParquetArtifact(Artifact):
     @cached_property
     def data(self) -> pl.LazyFrame:
         return pl.scan_parquet(self.path)
+
+    def get_unique_image_paths(self, column: str) -> Set[str]:
+        """
+        Принимает список колонок, которые нужно загрузить в S3.
+        Быстро извлекает уникальные непустые пути с помощью Polars.
+        """
+        paths = set()
+        lf = pl.scan_parquet(self.path)
+
+        # Выбираем колонку, убираем null/пустые строки и берем unique
+        filtered_lf = (
+            lf.select([column])
+            .filter(pl.col(column).is_not_null() & (pl.col(column).str.strip_chars() != ""))
+            .unique()
+        )
+
+        # Собираем данные (выполняем LazyFrame)
+        unique_paths = filtered_lf.collect().get_column(column).to_list()
+        for path in unique_paths:
+            paths.add(path)
+
+        return paths
 
     def get_data_chunks(self, chunk_size: int) -> Generator[io.BytesIO, None, None]:
         df_collected = self.data.collect(streaming=True)

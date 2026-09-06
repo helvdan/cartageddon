@@ -26,7 +26,7 @@ class DeduplicateStage(Stage):
             artifact = artifacts[oc_table_name]
             cleaned_artifact = artifact.deduplicate(rule.subset, rule.keep)
 
-            deduped_artifact = self._create_artifact(oc_table_name)
+            deduped_artifact = self.create_artifact(oc_table_name)
             deduped_artifact.save(cleaned_artifact.data)
 
             output[oc_table_name] = deduped_artifact

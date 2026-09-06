@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Type
 
 from artifacts import Artifact
-from common import RunTimeContext, StageContext
+from common import RunTimeContext
 
 
 class Stage(ABC):
@@ -38,9 +38,6 @@ class Stage(ABC):
     def name(self) -> str:
         """Имя стадии для сопоставления с аргументами CLI."""
         pass
-
-    def get_local_context(self) -> StageContext:
-        return getattr(self.global_context, self.name)
 
     def clean_previous_data(self) -> Any:
         """Очистить данные предыдущего запуска."""

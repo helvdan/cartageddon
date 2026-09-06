@@ -1,11 +1,12 @@
 import logging
+import os
 import sys
 import time
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Type
 
 from artifacts import Artifact
 from cartageddon.hooks.base import BaseHook, MeasureRunTime, CleanArtifacts, CheckArtifactOverwrite
-from common import RunTimeContext, AppendOnlyDict
+from common import RunTimeContext
 from schema import OC_TABLES
 from stages import (
     ExtractTableStage,
@@ -21,7 +22,7 @@ logger = logging.getLogger("PIPELINE")
 
 
 class Pipeline:
-    """Оркестратор, управляет стадиями"""
+    """Оркестратор, управляет стадиями и хуками"""
 
     # Стадии спроектированы и оптимизированы под запуск в этом порядке,
     # но могут быть пропущены при определенных условиях
@@ -35,24 +36,31 @@ class Pipeline:
     )
 
     def __init__(self, context: RunTimeContext, run_default_hooks: bool = True) -> None:
-        self.stages = [stage_cls(context) for stage_cls in self.STAGES_ORDER]
+        self._context = context
+        self.stages = []
+        self._hooks = {}
 
         if not self.STAGES_ORDER[0].is_mandatory:
             raise AssertionError("Первая стадия должна быть обязательна!")
 
-        self._hooks: List[BaseHook] = [
-            MeasureRunTime(), CheckArtifactOverwrite(), CleanArtifacts()
-        ] if run_default_hooks else []
+        for stage_cls in self.STAGES_ORDER:
+            self.stages.append(stage_cls(context))
+            if run_default_hooks:
+                self._hooks[stage_cls.name] = [
+                    MeasureRunTime(), CheckArtifactOverwrite(), CleanArtifacts()
+                ]
+            else:
+                self._hooks[stage_cls.name] = []
 
-    def add_hook(self, hook: BaseHook) -> None:
-        self._hooks.append(hook)
+    def add_hook(self, hook: BaseHook, stage_cls: Type[Stage]) -> None:
+        self._hooks[stage_cls.name].append(hook)
 
     def _run_before_hooks(self, stage: Stage, artifacts: List[Artifact]) -> None:
-        for hook in self._hooks:
+        for hook in self._hooks[stage.name]:
             hook.run_before(stage, artifacts)
 
     def _run_after_hooks(self, stage: Stage, artifacts: List[Artifact], exc: Exception = None) -> None:
-        hooks = reversed(self._hooks)
+        hooks = reversed(self._hooks[stage.name])
         for hook in hooks:
             try:
                 if exc is not None:
@@ -110,15 +118,8 @@ class Pipeline:
 
         return artifacts
 
-    # def _check_artifacts(self, artifacts: Dict[str, Artifact], table_names: Set[str], prev_stages: List[Stage]) -> None:
-    #     mandatory_stage = prev_stages[0]
-    #     missing = table_names - artifacts.keys()
-    #     for oc_table_name in missing:
-    #         missing_artifact_path = mandatory_stage._get_path(oc_table_name)
-    #         logger.error(f"Не найден артефакт {missing_artifact_path}")
-    #
-    #     if missing:
-    #         raise RuntimeError(f"Не найдены артефакты для таблиц {', '.join(missing)}")
+    def _create_tmp_dir(self):
+        os.makedirs(self._context.work_dir, exist_ok=True)
 
     def execute(self, oc_table_names: set = None, active_stage_names: set = None) -> None:
         """
@@ -127,6 +128,7 @@ class Pipeline:
         :param active_stage_names: Список стадий, которые будут запущены
         :return:
         """
+        self._create_tmp_dir()
         total_stages = len(self.STAGES_ORDER)
 
         if not oc_table_names:
@@ -179,53 +181,3 @@ class Pipeline:
             return self._restore_artifacts(first_stage_index, oc_table_names)
 
         return dict.fromkeys(oc_table_names)
-
-
-if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.DEBUG, format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s"
-    )
-
-    ctx = RunTimeContext(
-        stages=AppendOnlyDict(),
-
-        work_dir="/tmp",
-        single_language=True,
-
-        # mysql
-        chunk_size=5000,
-        oc_user="opencart_user",
-        oc_password="opencart_password",
-        oc_host="localhost",
-        oc_port=3307,
-        oc_database="opencart_db",
-
-        # postgres
-        pg_user="django_user",
-        pg_password="django_password",
-        pg_host="postgres",
-        pg_port=5432,
-        pg_database="django_project_db",
-    )
-
-    pipeline = Pipeline(ctx)
-    pipeline.execute(
-        oc_table_names={
-            'oc_product',
-            'oc_product_description',
-            'oc_review',
-            'oc_manufacturer',
-            'oc_stock_status',
-            'oc_tax_class',
-            'oc_length_class',
-            'oc_weight_class'
-        },
-        active_stage_names={
-            # "EXTRACT",
-            "NORMALIZE",
-            # "deduplicate",
-            # "check_integrity",
-            # "join_tables",
-            # "load"
-        }
-    )

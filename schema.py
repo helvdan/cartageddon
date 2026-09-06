@@ -86,3 +86,25 @@ def _field_is_pk(field):
     if field.metadata and b"primary_key" in field.metadata:
         return field.metadata[b"primary_key"].decode("utf-8") == "True"
     return False
+
+
+def _field_is_s3(field):
+    if field.metadata and b"upload_to_s3" in field.metadata:
+        return field.metadata[b"upload_to_s3"].decode("utf-8") == "True"
+    return False
+
+
+def get_s3_fields():
+    s3_fields_mapping = {}
+
+    for oc_table_name in OC_TABLES:
+        schema = _get_schema(oc_table_name)
+        s3_fields = []
+        for field in schema:
+            if _field_is_s3(field):
+                s3_fields.append(field.name)
+
+        if s3_fields:
+            s3_fields_mapping[oc_table_name] = s3_fields
+
+    return s3_fields_mapping

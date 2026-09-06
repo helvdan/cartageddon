@@ -33,7 +33,7 @@ class NormalizeValuesStage(Stage):
             table_data = self.transform(artifact)
             columns_data = [list(col) for col in zip(*table_data)]
 
-            new_artifact = self._create_artifact(oc_table_name)
+            new_artifact = self.create_artifact(oc_table_name)
             new_artifact.save(columns_data, schema=SCHEMAS[oc_table_name])
             new_artifacts[oc_table_name] = new_artifact
         return new_artifacts

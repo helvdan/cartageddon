@@ -1,7 +1,7 @@
 import logging
 import time
-from abc import ABC, abstractmethod
-from typing import List, Any, Dict
+from abc import ABC
+from typing import List, Any
 
 from artifacts import Artifact
 
@@ -52,10 +52,9 @@ class CleanArtifacts(BaseHook):
             artifacts_to_delete.extend(k_diff)
 
         for artifact_key in artifacts_to_delete:
-            artifact = artifacts[artifact_key]
+            artifact = self.start_artifacts[artifact_key]
             if artifact is not None:
                 artifact.delete()
-                logger.info(f"Артефакт удалён: {artifact.path}")
 
 
 class CheckArtifactOverwrite(BaseHook):

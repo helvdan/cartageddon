@@ -24,6 +24,8 @@ class RunTimeContext:
     pg_host: Optional[str] = None
     pg_port: Optional[int] = None
     pg_database: Optional[str] = None
+    pg_connect_timeout: int = 3
+    pg_timeout: int = 30
 
     # Настройки, влияющие на итоговую структуру таблиц
     single_language: bool = False
@@ -35,4 +37,14 @@ class RunTimeContext:
             "host": self.oc_host,
             "port": self.oc_port,
             "database": self.oc_database,
+        }
+
+    def get_pg_db_config(self):
+        return {
+            "user": self.pg_user,
+            "password": self.pg_password,
+            "host": self.pg_host,
+            "port": self.pg_port,
+            "dbname": self.pg_database,
+            "connect_timeout": self.pg_connect_timeout,
         }

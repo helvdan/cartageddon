@@ -4,7 +4,6 @@ from typing import Dict, List
 import psycopg
 
 from artifacts import ParquetArtifact
-from common import RunTimeContext
 from schema import get_pg_table_name, get_pg_columns, SCHEMAS
 from stages.base import Stage
 
@@ -15,15 +14,6 @@ class LoadStage(Stage):
     name = "LOAD"
     logger = logging.getLogger(name)
 
-    def __init__(self, context: RunTimeContext):
-        self.global_context = context
-        # Формируем строку подключения (psycopg3 принимает как URI, так и keyword-строку)
-        self.conn_info = (
-            f"user={self.global_context.pg_user} password={self.global_context.pg_password} "
-            f"host={self.global_context.pg_host} port={self.global_context.pg_port} dbname={self.global_context.pg_database}"
-        )
-        super().__init__(context)
-
     def _get_joined_tables(self, artifact: ParquetArtifact) -> List:
         from stages import JoinTablesStage
 
@@ -31,7 +21,7 @@ class LoadStage(Stage):
         return parts[1:parts.index(JoinTablesStage.postfix)] if JoinTablesStage.postfix in parts else []
 
     def run(self, artifacts: Dict[str, ParquetArtifact]) -> None:
-        with psycopg.connect(self.conn_info) as conn:
+        with psycopg.connect(**self.global_context.get_pg_db_config()) as conn:
 
             for oc_table_name in SCHEMAS.keys():
                 if oc_table_name not in artifacts:

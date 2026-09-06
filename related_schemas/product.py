@@ -25,7 +25,11 @@ PRODUCT_SCHEMA = pa.schema([
         "foreign_key": "oc_stock_status",
         "on_delete": "DO_NOTHING"
     }),
-    pa.field("image", pa.string(), metadata={"max_length": "255", "nullable": "True"}),
+    pa.field("image", pa.string(), metadata={
+        "max_length": "255",
+        "nullable": "True",
+        "upload_to_s3": "True"
+    }),
     pa.field("manufacturer_id", pa.int32(), metadata={
         "foreign_key": "oc_manufacturer",
         "on_delete": "SET_NULL",
