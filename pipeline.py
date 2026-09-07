@@ -14,9 +14,10 @@ from stages import (
     DeduplicateStage,
     CheckIntegrityStage,
     JoinTablesStage,
-    LoadStage
+    LoadStage,
+    S3ImageUploadStage,
 )
-from stages.base import Stage
+from stages.base import Stage, ParallelStages
 
 logger = logging.getLogger("PIPELINE")
 
@@ -32,7 +33,10 @@ class Pipeline:
         DeduplicateStage,
         CheckIntegrityStage,
         JoinTablesStage,
-        LoadStage
+        (
+            LoadStage,
+            S3ImageUploadStage
+        )
     )
 
     def __init__(self, context: RunTimeContext, run_default_hooks: bool = True) -> None:
@@ -44,13 +48,18 @@ class Pipeline:
             raise AssertionError("Первая стадия должна быть обязательна!")
 
         for stage_cls in self.STAGES_ORDER:
-            self.stages.append(stage_cls(context))
+            if isinstance(stage_cls, tuple):
+                stage_obj = ParallelStages(context, *stage_cls)
+            else:
+                stage_obj = stage_cls(context)
+
+            self.stages.append(stage_obj)
             if run_default_hooks:
-                self._hooks[stage_cls.name] = [
+                self._hooks[stage_obj.name] = [
                     MeasureRunTime(), CheckArtifactOverwrite(), CleanArtifacts()
                 ]
             else:
-                self._hooks[stage_cls.name] = []
+                self._hooks[stage_obj.name] = []
 
     def add_hook(self, hook: BaseHook, stage_cls: Type[Stage]) -> None:
         self._hooks[stage_cls.name].append(hook)

@@ -122,8 +122,8 @@ CREATE TABLE `oc_product` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `oc_product` (`product_id`, `model`, `sku`, `upc`, `ean`, `jan`, `isbn`, `mpn`, `location`, `quantity`, `stock_status_id`, `image`, `manufacturer_id`, `shipping`, `price`, `points`, `tax_class_id`, `date_available`, `weight`, `weight_class_id`, `length`, `width`, `height`, `length_class_id`, `subtract`, `minimum`, `sort_order`, `status`, `viewed`, `date_added`, `date_modified`, `yandexmerchants`) VALUES
-(1, 'Product 1', 'SKU-001', '', '', '', '', '', 'Warehouse A', 10, 1, 'catalog/demo/iphone_1.png', 1, 1, 100.0000, 0, 1, '2026-01-01', 0.50000000, 1, 15.00000000, 7.00000000, 0.80000000, 1, 1, 1, 1, 1, 42, '2026-01-01 10:00:00', '2026-01-01 10:00:00', 1),
-(2, 'Product 2', 'SKU-002', '', '', '', '', '', 'Warehouse B', 0, 2, 'catalog/demo/htc_touch_hd_1.png', 2, 1, 250.0000, 0, 1, '2026-01-02', 0.60000000, 1, 12.00000000, 6.00000000, 1.20000000, 1, 1, 1, 2, 1, 15, '2026-01-02 11:00:00', '2026-01-02 11:00:00', 1);
+(1, 'Product 1', 'SKU-001', '', '', '', '', '', 'Warehouse A', 10, 1, 'catalog/product/1/1.jpeg', 1, 1, 100.0000, 0, 1, '2026-01-01', 0.50000000, 1, 15.00000000, 7.00000000, 0.80000000, 1, 1, 1, 1, 1, 42, '2026-01-01 10:00:00', '2026-01-01 10:00:00', 1),
+(2, 'Product 2', 'SKU-002', '', '', '', '', '', 'Warehouse B', 0, 2, 'catalog/product/2/1.jpeg', 2, 1, 250.0000, 0, 1, '2026-01-02', 0.60000000, 1, 12.00000000, 6.00000000, 1.20000000, 1, 1, 1, 2, 1, 15, '2026-01-02 11:00:00', '2026-01-02 11:00:00', 1);
 
 -- --------------------------------------------------------
 -- Структура таблицы `oc_product_description`

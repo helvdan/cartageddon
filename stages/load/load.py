@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List
 
 import psycopg
@@ -10,9 +9,8 @@ from stages.base import Stage
 
 class LoadStage(Stage):
     artifact_cls = ParquetArtifact
-    postfix = "loaded"
-    name = "LOAD"
-    logger = logging.getLogger(name)
+    postfix = "loading_db"
+    name = "LOAD_DB"
 
     def _get_joined_tables(self, artifact: ParquetArtifact) -> List:
         from stages import JoinTablesStage
@@ -21,6 +19,7 @@ class LoadStage(Stage):
         return parts[1:parts.index(JoinTablesStage.postfix)] if JoinTablesStage.postfix in parts else []
 
     def run(self, artifacts: Dict[str, ParquetArtifact]) -> None:
+        # self.logger.debug(f"connecting to {}")
         with psycopg.connect(**self.global_context.get_pg_db_config()) as conn:
 
             for oc_table_name in SCHEMAS.keys():

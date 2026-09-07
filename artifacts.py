@@ -7,6 +7,7 @@ from typing import Any, Optional, Iterable, Set, Generator, List, Dict
 import logging
 import polars as pl
 import pyarrow as pa
+import pyarrow.csv as pa_csv
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
@@ -141,37 +142,66 @@ class ParquetArtifact(Artifact):
         return pl.scan_parquet(self.path)
 
     def get_unique_image_paths(self, column: str) -> Set[str]:
+        """Принимает имя колонки, которую нужно загрузить в S3.
+
+        Быстро извлекает уникальные непустые пути с помощью PyArrow.
         """
-        Принимает список колонок, которые нужно загрузить в S3.
-        Быстро извлекает уникальные непустые пути с помощью Polars.
-        """
+        if not self.path.exists():
+            return set()
+
         paths = set()
-        lf = pl.scan_parquet(self.path)
 
-        # Выбираем колонку, убираем null/пустые строки и берем unique
-        filtered_lf = (
-            lf.select([column])
-            .filter(pl.col(column).is_not_null() & (pl.col(column).str.strip_chars() != ""))
-            .unique()
-        )
+        # Открываем Parquet-файл для потокового чтения
+        parquet_file = pq.ParquetFile(self.path)
 
-        # Собираем данные (выполняем LazyFrame)
-        unique_paths = filtered_lf.collect().get_column(column).to_list()
-        for path in unique_paths:
-            paths.add(path)
+        # Читаем файл батчами, запрашивая строго ОДНУ нужную колонку (проекция на уровне диска)
+        for record_batch in parquet_file.iter_batches(columns=[column]):
+            chunk = record_batch.column(column)
+
+            # 1. Фильтруем null-значения
+            valid_mask = pc.is_valid(chunk)
+
+            # 2. Фильтруем пустые строки (после удаления пробелов)
+            # Сначала удаляем пробелы по краям
+            stripped = pc.utf8_trim_whitespace(chunk)
+            # Проверяем длину строки (длина должна быть больше 0)
+            non_empty_mask = pc.greater(pc.utf8_length(stripped), 0)
+
+            # Объединяем маски (значение валидно И строка не пустая)
+            final_mask = pc.and_(valid_mask, non_empty_mask)
+
+            # Применяем фильтр к текущему батчу данных
+            filtered_chunk = pc.filter(chunk, final_mask)
+
+            # 3. Находим уникальные значения в рамках текущего батча
+            unique_chunk = pc.unique(filtered_chunk)
+
+            # Переводим в нативные строки Python и наполняем set (дубликаты отсекаются автоматически)
+            # to_pylist() в PyArrow работает очень быстро
+            paths.update(unique_chunk.to_pylist())
 
         return paths
 
     def get_data_chunks(self, chunk_size: int) -> Generator[io.BytesIO, None, None]:
-        df_collected = self.data.collect(streaming=True)
+        """Потоковое чтение Parquet-файла чанками через PyArrow."""
+        parquet_file = pq.ParquetFile(self.path)
 
-        for slice_df in df_collected.iter_slices(n_rows=chunk_size):
-            if slice_df.is_empty():
+        for record_batch in parquet_file.iter_batches(batch_size=chunk_size):
+            if record_batch.num_rows == 0:
                 continue
 
+            # Используем короткий алиас pa
+            table = pa.Table.from_batches([record_batch])
+
             buffer = io.BytesIO()
-            # Важно: отключаем заголовки, задаем явный маркер NULL
-            slice_df.write_csv(buffer, include_header=False, null_value="")
+
+            # Используем явно импортированный pa_csv
+            pa_csv.write_csv(
+                table,
+                buffer,
+                write_options=pa_csv.WriteOptions(include_header=False)
+            )
+
             buffer.seek(0)
             yield buffer
 

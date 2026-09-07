@@ -12,8 +12,8 @@ from stages.base import Stage
 
 class S3ImageUploadStage(Stage):
     artifact_cls = ParquetArtifact
-    postfix = "uploaded"
-    name = "S3_UPLOAD"
+    postfix = "loading_s3"
+    name = "LOAD_S3"
     logger = logging.getLogger(name)
 
     def _upload_file(self, s3_client, local_path: str, s3_key: str, bucket_name: str) -> bool:
@@ -33,6 +33,7 @@ class S3ImageUploadStage(Stage):
         s3_fields_mapping = get_s3_fields()
         print(s3_fields_mapping)
 
+        images = []
         for oc_table_name in artifacts:
             if oc_table_name not in s3_fields_mapping:
                 continue
@@ -40,30 +41,24 @@ class S3ImageUploadStage(Stage):
             print(oc_table_name)
             artifact = artifacts[oc_table_name]
             for column in s3_fields_mapping[oc_table_name]:
+                print(column)
                 relative_paths = artifact.get_unique_image_paths(column)
                 print(relative_paths)
+                images.extend(relative_paths)
 
-        return
-
-
-
-        # Шаг 1: Извлекаем относительные пути через добавленный в артефакт метод Polars
-        self.logger.info("Извлечение путей к изображениям из Parquet с помощью Polars...")
-
-
-        if not relative_paths:
-            self.logger.info("Валидные пути к изображениям в артефакте не найдены.")
-            return
+        print('1 ########################## 1')
+        print(images)
+        print('2 ########################## 2')
 
         # Получаем настройки путей и S3 из глобального контекста рантайма
-        image_base_dir = self.global_context.get_opencart_image_dir()
-        s3_bucket = self.global_context.get_s3_bucket_name()
+        image_base_dir = self.global_context.open_cart_image_dir
+        s3_bucket = self.global_context.aws_bucket_name
         s3_config = self.global_context.get_s3_config()
-        max_workers = getattr(self.global_context, "s3_max_workers", 16)
+        max_workers = self.global_context.s3_max_workers
 
         # Шаг 2: Фильтруем и готовим абсолютные локальные пути
         upload_tasks = []
-        for rel_path in relative_paths:
+        for rel_path in images:
             local_full_path = os.path.join(image_base_dir, rel_path)
             if os.path.exists(local_full_path):
                 upload_tasks.append({"local_path": local_full_path, "s3_key": rel_path})

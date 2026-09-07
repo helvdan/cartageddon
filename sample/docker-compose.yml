@@ -33,6 +33,19 @@ services:
       timeout: 5s
       retries: 5
 
+  s3_sample:
+    build:
+      context: .
+      dockerfile: minio.Dockerfile
+    ports:
+      - "9000:9000"       # API для Django
+      - "9001:9001"       # Веб-панель управления
+    volumes:
+      - s3_sample_data:/data
+    environment:
+      - MINIO_ROOT_USER=minio_admin
+      - MINIO_ROOT_PASSWORD=minio_strong_password
+
   etl_cli_sample:
     build: .
     container_name: etl_cli
@@ -51,3 +64,4 @@ services:
 volumes:
   mysql_sample_data:
   pg_sample_data:
+  s3_sample_data:
