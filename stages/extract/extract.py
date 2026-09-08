@@ -51,7 +51,7 @@ class ExtractTableStage(Stage):
     def run(self, artifacts: Dict[str, None]) -> Dict[str, PickleArtifact]:
         db_config = self.global_context.get_oc_db_config()
         self.logger.debug(f"connecting to {db_config['host']}:{db_config['port']}")
-        with pymysql.connect(**db_config) as conn:
+        with pymysql.connect(**db_config, charset="utf8mb4") as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SET SESSION TRANSACTION READ ONLY;")
 

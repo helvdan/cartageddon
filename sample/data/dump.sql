@@ -1,4 +1,7 @@
+/*!40101 SET NAMES utf8mb4 */;
+
 -- Тестовый дамп MySQL для OpenCart 3.x
+SET SQL_MODE = '';
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- --------------------------------------------------------
@@ -159,14 +162,15 @@ CREATE TABLE `oc_review` (
   `rating` int(1) NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '0',
   `date_added` datetime NOT NULL,
-  `date_modified` datetime NOT NULL,
+  `date_modified` datetime,
   PRIMARY KEY (`review_id`),
   KEY `product_id` (`product_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `oc_review` (`review_id`, `product_id`, `customer_id`, `author`, `text`, `rating`, `status`, `date_added`, `date_modified`) VALUES
-(1, 1, 0, 'John Doe', 'Great smartphone! Battery life is excellent.', 5, 1, '2026-01-05 14:30:00', '2026-01-05 14:30:00'),
+(1, 1, 0, 'John Doe', 'Great smartphone! Battery life is excellent.', 5, 1, '2026-01-05 14:30:00', '0000-00-00 00:00:00'),
 (2, 1, 0, 'Иван Иванов', 'Отличный телефон, пользуюсь каждый день.', 5, 1, '2026-01-06 09:15:00', '2026-01-06 09:15:00'),
-(3, 2, 0, 'Jane Smith', 'Good phone but the battery could be better.', 4, 1, '2026-01-07 18:20:00', '2026-01-07 18:20:00');
+(3, 2, 0, 'Jane Smith', 'Good phone but the battery could be better.', 4, 1, '2026-01-07 18:20:00', '2026-01-07 18:20:00'),
+(4, 2, 0, 'Jane Smith', 'Good phone but the battery could be better.', 4, 1, '2026-01-07 18:20:00', '2026-01-07 18:20:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
