@@ -34,7 +34,7 @@ class ExtractTableStage(Stage):
 
         for oc_table_name, schema in oc_table_map.items():
             columns = schema.names
-            oc_columns = ", ".join(columns)
+            oc_columns = ", ".join(f"`{column}`" for column in columns)
             sql = f"SELECT {oc_columns} FROM {oc_table_name}"
             self.logger.debug(f"SQL: {sql}")
 

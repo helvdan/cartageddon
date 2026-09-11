@@ -18,6 +18,7 @@ from stages import (
     S3ImageUploadStage,
 )
 from stages.base import Stage, ParallelStages
+from hooks.pipeline_hooks import CheckPyarrowSchema
 
 logger = logging.getLogger("PIPELINE")
 
@@ -42,7 +43,10 @@ class Pipeline:
     def __init__(self, context: RunTimeContext, run_default_hooks: bool = True) -> None:
         self._context = context
         self.stages = []
-        self._hooks = {}
+        self._stage_hooks = {}
+        self._pipeline_hooks = [
+            CheckPyarrowSchema()
+        ]
 
         if not self.STAGES_ORDER[0].is_mandatory:
             raise AssertionError("Первая стадия должна быть обязательна!")
@@ -55,21 +59,25 @@ class Pipeline:
 
             self.stages.append(stage_obj)
             if run_default_hooks:
-                self._hooks[stage_obj.name] = [
+                self._stage_hooks[stage_obj.name] = [
                     MeasureRunTime(), CheckArtifactOverwrite(), CleanArtifacts()
                 ]
             else:
-                self._hooks[stage_obj.name] = []
+                self._stage_hooks[stage_obj.name] = []
 
     def add_hook(self, hook: BaseHook, stage_cls: Type[Stage]) -> None:
-        self._hooks[stage_cls.name].append(hook)
+        self._stage_hooks[stage_cls.name].append(hook)
+
+    def _run_pipeline_before_hooks(self):
+        for hook in self._pipeline_hooks:
+            hook.run_before(self._context)
 
     def _run_before_hooks(self, stage: Stage, artifacts: List[Artifact]) -> None:
-        for hook in self._hooks[stage.name]:
+        for hook in self._stage_hooks[stage.name]:
             hook.run_before(stage, artifacts)
 
     def _run_after_hooks(self, stage: Stage, artifacts: List[Artifact], exc: Exception = None) -> None:
-        hooks = reversed(self._hooks[stage.name])
+        hooks = reversed(self._stage_hooks[stage.name])
         for hook in hooks:
             try:
                 if exc is not None:
@@ -137,6 +145,7 @@ class Pipeline:
         :param active_stage_names: Список стадий, которые будут запущены
         :return:
         """
+        self._run_pipeline_before_hooks()
         self._create_tmp_dir()
         total_stages = len(self.STAGES_ORDER)
 

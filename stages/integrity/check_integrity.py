@@ -47,7 +47,7 @@ class CheckIntegrityStage(Stage):
                     clean_lazy_data = artifact.apply_cascading_cleanup(fk_column, broken_rows, on_delete_action)
 
                     # 5. Создаем целевой очищенный артефакт и сохраняем данные
-                    changed_artifact = self._create_artifact(artifact.oc_table_name)
+                    changed_artifact = self.create_artifact(artifact.oc_table_name)
                     changed_artifact.save(clean_lazy_data, None)
 
                     # Обновляем результат в конвейере

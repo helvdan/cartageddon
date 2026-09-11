@@ -6,7 +6,10 @@ from related_schemas.product import (
     WEIGHT_CLASS_SCHEMA,
     TAX_CLASS_SCHEMA,
     MANUFACTURER_SCHEMA,
-    REVIEW_SCHEMA
+    REVIEW_SCHEMA,
+    CATEGORY_SCHEMA,
+    CATEGORY_DESCRIPTION_SCHEMA,
+    CATEGORY_PATH_SCHEMA,
 )
 
 
@@ -18,7 +21,10 @@ SCHEMAS = {
     "oc_weight_class": WEIGHT_CLASS_SCHEMA,
     "oc_length_class": LENGTH_CLASS_SCHEMA,
     "oc_product": PRODUCT_SCHEMA,
-    "oc_review": REVIEW_SCHEMA
+    "oc_review": REVIEW_SCHEMA,
+    "oc_category": CATEGORY_SCHEMA,
+    "oc_category_path": CATEGORY_PATH_SCHEMA,
+    "oc_category_description": CATEGORY_DESCRIPTION_SCHEMA,
 }
 
 

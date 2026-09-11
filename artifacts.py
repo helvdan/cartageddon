@@ -133,6 +133,8 @@ class PickleArtifact(Artifact):
                 if chunk:  # Проверяем, что чанк не пустой
                     pickle.dump(chunk, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+        logger.debug(f"Артефакт создан {self.path}")
+
 
 class ParquetArtifact(Artifact):
     extension = "parquet"
@@ -232,6 +234,8 @@ class ParquetArtifact(Artifact):
 
         else:
             raise ValueError(f"ParquetArtifact.save received unsupported data type: {type(data)}")
+
+        logger.debug(f"Артефакт создан {self.path}")
 
     def get_broken_fks(self, fk_column: str, target_artifact: 'ParquetArtifact') -> pl.DataFrame:
         """

@@ -28,7 +28,7 @@ PRODUCT_SCHEMA = pa.schema([
     pa.field("image", pa.string(), metadata={
         "max_length": "255",
         "nullable": "True",
-        "upload_to_s3": "True"
+        # "upload_to_s3": "True"
     }),
     pa.field("manufacturer_id", pa.int32(), metadata={
         "foreign_key": "oc_manufacturer",
@@ -205,3 +205,35 @@ REVIEW_SCHEMA = pa.schema([
         "callback": "normalize_date",
     })
 ], metadata={"pg_name": "catalog_review"})
+
+CATEGORY_SCHEMA = pa.schema([
+    pa.field('category_id', pa.int32(), nullable=False),  # int (auto increment)
+    pa.field('image', pa.string(), nullable=True),        # varchar(255)
+    pa.field('sbmenu_icon', pa.string(), nullable=True),  # varchar(255)
+    pa.field('sbmenu_image', pa.string(), nullable=True), # varchar(255)
+    pa.field('parent_id', pa.int32(), nullable=False),    # int (default 0)
+    pa.field('top', pa.int8(), nullable=False),           # tinyint(1) -> в Arrow как int8/bool
+    pa.field('column', pa.int32(), nullable=False),       # int
+    pa.field('sort_order', pa.int32(), nullable=False),   # int (default 0)
+    pa.field('status', pa.int8(), nullable=False),        # tinyint(1) -> в Arrow как int8/bool
+    pa.field('date_added', pa.timestamp('us'), nullable=False),    # datetime
+    pa.field('date_modified', pa.timestamp('us'), nullable=False), # datetime
+    pa.field('code', pa.string(), nullable=True),         # varchar(64)
+    pa.field('sbmenu_content', pa.string(), nullable=True) # text
+])
+
+CATEGORY_DESCRIPTION_SCHEMA = pa.schema([
+    pa.field('category_id', pa.int32(), nullable=False),   # int (PRIMARY KEY)
+    pa.field('language_id', pa.int32(), nullable=False),   # int (PRIMARY KEY)
+    pa.field('name', pa.string(), nullable=False),         # varchar(255)
+    pa.field('description', pa.string(), nullable=True),   # text
+    pa.field('meta_title', pa.string(), nullable=False),   # varchar(255)
+    pa.field('meta_description', pa.string(), nullable=True), # text (по вашему скриншоту)
+    pa.field('meta_keyword', pa.string(), nullable=True)   # varchar(255)
+])
+
+CATEGORY_PATH_SCHEMA = pa.schema([
+    pa.field('category_id', pa.int32(), nullable=False),   # int (PRIMARY KEY)
+    pa.field('path_id', pa.int32(), nullable=False),       # int (PRIMARY KEY)
+    pa.field('level', pa.int32(), nullable=False)          # int
+])

@@ -4,6 +4,7 @@ from abc import ABC
 from typing import List, Any
 
 from artifacts import Artifact
+from common import RunTimeContext
 
 logger = logging.getLogger("HOOK")
 
@@ -17,6 +18,15 @@ class BaseHook(ABC):
 
     def run_after(self, stage: Any, artifacts: List[Artifact]) -> None:
         """Запускается ДО стадии. Принимает только исходные артефакты."""
+        pass
+
+
+class BasePipelineHook(ABC):
+
+    def run_before(self, ctx: RunTimeContext) -> None:
+        pass
+
+    def run_after(self, ctx: RunTimeContext) -> None:
         pass
 
 
