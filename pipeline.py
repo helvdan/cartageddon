@@ -7,7 +7,7 @@ from typing import Dict, Set, List, Type
 from artifacts import Artifact
 from cartageddon.hooks.base import BaseHook, MeasureRunTime, CleanArtifacts, CheckArtifactOverwrite
 from common import RunTimeContext
-from schema import OC_TABLES
+from schema import OpenCartSchema
 from stages import (
     ExtractTableStage,
     NormalizeValuesStage,
@@ -40,7 +40,8 @@ class Pipeline:
         )
     )
 
-    def __init__(self, context: RunTimeContext, run_default_hooks: bool = True) -> None:
+    def __init__(self, schema: OpenCartSchema, context: RunTimeContext, run_default_hooks: bool = True) -> None:
+        self._schema = schema
         self._context = context
         self.stages = []
         self._stage_hooks = {}
@@ -53,9 +54,9 @@ class Pipeline:
 
         for stage_cls in self.STAGES_ORDER:
             if isinstance(stage_cls, tuple):
-                stage_obj = ParallelStages(context, *stage_cls)
+                stage_obj = ParallelStages(schema, context, *stage_cls)
             else:
-                stage_obj = stage_cls(context)
+                stage_obj = stage_cls(schema, context)
 
             self.stages.append(stage_obj)
             if run_default_hooks:
@@ -70,7 +71,7 @@ class Pipeline:
 
     def _run_pipeline_before_hooks(self):
         for hook in self._pipeline_hooks:
-            hook.run_before(self._context)
+            hook.run_before(self._schema, self._context)
 
     def _run_before_hooks(self, stage: Stage, artifacts: List[Artifact]) -> None:
         for hook in self._stage_hooks[stage.name]:
@@ -150,7 +151,7 @@ class Pipeline:
         total_stages = len(self.STAGES_ORDER)
 
         if not oc_table_names:
-            oc_table_names = OC_TABLES.copy()
+            oc_table_names = self._schema.oc_tables.copy()
 
         if active_stage_names:
             total_stages = len(active_stage_names)

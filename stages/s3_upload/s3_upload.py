@@ -3,7 +3,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List
 
-from schema import get_s3_fields
+# from schema import get_s3_fields
 import boto3
 
 from artifacts import ParquetArtifact
@@ -30,7 +30,7 @@ class S3ImageUploadStage(Stage):
             return False
 
     def run(self, artifacts: Dict[str, ParquetArtifact]) -> None:
-        s3_fields_mapping = get_s3_fields()
+        s3_fields_mapping = self.schema.get_s3_fields()
         print(s3_fields_mapping)
 
         images = []

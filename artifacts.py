@@ -140,6 +140,11 @@ class ParquetArtifact(Artifact):
     extension = "parquet"
 
     @cached_property
+    def headers(self):
+        parquet_file = pq.ParquetFile(self.path)
+        return parquet_file.schema.names
+
+    @cached_property
     def data(self) -> pl.LazyFrame:
         return pl.scan_parquet(self.path)
 

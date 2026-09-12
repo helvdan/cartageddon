@@ -1,7 +1,6 @@
 import logging
 
 from hooks.base import BasePipelineHook
-from schema import SCHEMAS
 
 logger = logging.getLogger("HOOK.SSH")
 
@@ -12,8 +11,8 @@ class SchemaValidationError(Exception):
 
 class CheckPyarrowSchema(BasePipelineHook):
 
-    def run_before(self, ctx) -> None:
-        for oc_table_name, schema in SCHEMAS.items():
+    def run_before(self, schema, ctx) -> None:
+        for oc_table_name, schema in schema.items():
             if not schema.metadata:
                 raise SchemaValidationError(f"No metadata for table {oc_table_name}")
 

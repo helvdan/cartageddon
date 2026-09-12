@@ -3,8 +3,6 @@ import json
 from functools import partial
 from typing import Callable
 
-from schema import SCHEMAS
-
 
 def to_html(value):
     return html_lib.unescape(value)
@@ -41,8 +39,8 @@ TRANSFORM_REGISTRY = {
 }
 
 
-def get_callback(oc_table_name: str, col_num: int) -> Callable:
-    field = SCHEMAS[oc_table_name][col_num]
+def get_callback(schema, oc_table_name: str, col_num: int) -> Callable:
+    field = schema[oc_table_name][col_num]
     meta = field.metadata
 
     if meta and b"callback" in meta:

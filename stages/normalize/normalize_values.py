@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Tuple, Dict
 
 from artifacts import PickleArtifact, ParquetArtifact
-from schema import SCHEMAS
 from stages.base import Stage
 from stages.normalize.rules import get_callback
 
@@ -20,7 +19,7 @@ class NormalizeValuesStage(Stage):
         for row in artifact.data:
             transformed_row = []
             for i, cell in enumerate(row):
-                callback = get_callback(artifact.oc_table_name, i)
+                callback = get_callback(self.schema, artifact.oc_table_name, i)
                 cell = callback(cell) if callback else cell
                 transformed_row.append(cell)
             transformed_data.append(tuple(transformed_row))
@@ -34,7 +33,7 @@ class NormalizeValuesStage(Stage):
             columns_data = [list(col) for col in zip(*table_data)]
 
             new_artifact = self.create_artifact(oc_table_name)
-            new_artifact.save(columns_data, schema=SCHEMAS[oc_table_name])
+            new_artifact.save(columns_data, schema=self.schema.get_pyarrow_schema(oc_table_name))
             new_artifacts[oc_table_name] = new_artifact
         return new_artifacts
 

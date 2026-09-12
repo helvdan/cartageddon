@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Dict
 
 from artifacts import ParquetArtifact
-from schema import get_foreign_keys
 from stages.base import Stage
 
 
@@ -22,7 +21,7 @@ class CheckIntegrityStage(Stage):
 
         for table_name, artifact in artifacts.items():
             # 1. Запрашиваем у артефакта список его внешних ключей по метаданным
-            foreign_keys = get_foreign_keys(artifact.oc_table_name)
+            foreign_keys = self.schema.get_foreign_keys(artifact.oc_table_name)
             if not foreign_keys:
                 continue
 

@@ -3,7 +3,7 @@ from typing import Dict, List
 import psycopg
 
 from artifacts import ParquetArtifact
-from schema import get_pg_table_name, get_pg_columns, SCHEMAS
+# from schema import get_pg_table_name, get_pg_columns, SCHEMAS
 from stages.base import Stage
 
 
@@ -22,21 +22,22 @@ class LoadStage(Stage):
         # self.logger.debug(f"connecting to {}")
         with psycopg.connect(**self.global_context.get_pg_db_config()) as conn:
 
-            for oc_table_name in SCHEMAS.keys():
+            for oc_table_name in self.schema.keys():
                 if oc_table_name not in artifacts:
                     # Некоторые таблицы могут быть выброшены на предыдущих стадиях, например oc_product_description
                     continue
 
                 artifact = artifacts[oc_table_name]
                 joined_tables = self._get_joined_tables(artifact)
-                pg_table_name = get_pg_table_name(oc_table_name)
-                pg_cols = get_pg_columns(oc_table_name, *joined_tables)
+                pg_table_name = self.schema.get_pg_table_name(oc_table_name)
+                pg_cols = self.schema.get_pg_columns(artifact.headers, oc_table_name, *joined_tables)
 
                 self.logger.info(f"Начинается загрузка таблицы: {pg_table_name}")
                 chunk_counter = 0
 
                 pg_columns_str = ", ".join(pg_cols)
                 copy_query = f"COPY {pg_table_name} ({pg_columns_str}) FROM STDIN WITH (FORMAT CSV, NULL '')"
+                self.logger.debug(f"SQL: {copy_query}")
 
                 for binary_buffer in artifact.get_data_chunks(chunk_size=self.global_context.chunk_size):
                     try:

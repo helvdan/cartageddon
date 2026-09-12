@@ -3,6 +3,7 @@ import time
 from abc import ABC
 from typing import List, Any
 
+from schema import OpenCartSchema
 from artifacts import Artifact
 from common import RunTimeContext
 
@@ -23,10 +24,10 @@ class BaseHook(ABC):
 
 class BasePipelineHook(ABC):
 
-    def run_before(self, ctx: RunTimeContext) -> None:
+    def run_before(self, schema: OpenCartSchema, ctx: RunTimeContext) -> None:
         pass
 
-    def run_after(self, ctx: RunTimeContext) -> None:
+    def run_after(self, schema: OpenCartSchema, ctx: RunTimeContext) -> None:
         pass
 
 

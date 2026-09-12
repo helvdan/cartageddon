@@ -14,21 +14,15 @@ class JoinTablesStage(Stage):
     postfix = "joined"
     logger = logging.getLogger(name)
 
-    def __init__(self, context: RunTimeContext) -> None:
-        self.tables_to_join = {}
-        if context.single_language:
-            self.tables_to_join["oc_product"] = ("oc_product_description",)
-
-        super(JoinTablesStage, self).__init__(context)
-
     def run(self, artifacts: Dict[str, ParquetArtifact]) -> Dict[str, ParquetArtifact]:
         output: Dict[str, ParquetArtifact] = artifacts.copy()
+        tables_to_join = self.schema.get_join_map()
 
-        if not self.tables_to_join:
+        if not tables_to_join:
             self.logger.info(f"Не переданы флаги для стадии {self.name}, стадия будет пропущена!")
             return output
 
-        for main_table, dependent_tables in self.tables_to_join.items():
+        for main_table, dependent_tables in tables_to_join.items():
 
             if main_table not in artifacts:
                 continue

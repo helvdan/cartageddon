@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Type, Any, Tuple
 import shutil
 
+from schema import OpenCartSchema
 from artifacts import Artifact
 from common import RunTimeContext
 
@@ -26,7 +27,8 @@ class Stage(ABC):
         """Каждый наследник обязан вернуть конкретный класс артефакта."""
         pass
 
-    def __init__(self, context: RunTimeContext) -> None:
+    def __init__(self, schema: OpenCartSchema, context: RunTimeContext) -> None:
+        self.schema = schema
         self.global_context = context
 
     def _get_path(self, oc_table_name) -> Path:
@@ -89,10 +91,10 @@ class ParallelStages(Stage):
     def postfix(self) -> str:
         return "parallel_load"
 
-    def __init__(self, context: RunTimeContext, *stage_classes: Type[Stage]) -> None:
-        super().__init__(context)
+    def __init__(self, schema: OpenCartSchema, context: RunTimeContext, *stage_classes: Type[Stage]) -> None:
+        super().__init__(schema, context)
         # Создаем экземпляры стадий (например, LoadDBStage и LoadS3Stage)
-        self._stages: List[Stage] = [cls(context) for cls in stage_classes]
+        self._stages: List[Stage] = [cls(schema, context) for cls in stage_classes]
 
     @property
     def name(self) -> str:

@@ -5,7 +5,6 @@ import pymysql
 from pymysql.cursors import SSCursor
 
 from artifacts import PickleArtifact
-from schema import SCHEMAS
 from stages.base import Stage
 
 
@@ -29,7 +28,7 @@ class ExtractTableStage(Stage):
         new_artifacts = {}
 
         oc_table_map = {
-            oc_table_name: SCHEMAS[oc_table_name] for oc_table_name in artifacts.keys()
+            oc_table_name: self.schema[oc_table_name] for oc_table_name in artifacts.keys()
         }
 
         for oc_table_name, schema in oc_table_map.items():
