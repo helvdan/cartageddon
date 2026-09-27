@@ -315,3 +315,50 @@ class ParquetArtifact(Artifact):
         object.__setattr__(new_artifact, "data", deduped_lazy)
 
         return new_artifact
+
+    def reduce_hierarchy(
+            self,
+            category_artifact: 'ParquetArtifact',
+            product_id_col: str,
+            category_id_col: str,
+            parent_id_col: str
+    ) -> 'ParquetArtifact':
+        """
+        Удаляет избыточные родительские связи для товаров, оставляя только глубокие подкатегории.
+
+        Работает лениво (LazyFrame) по логике SQL-условия NOT EXISTS:
+        Исключает связь (Товар -> Категория X), если у этого же товара существует связь
+        с другой категорией Y, у которой Parent ID равен X.
+        """
+        # Теккущие грязные связи (например, oc_product_to_category)
+        ptc1 = self.data
+        ptc2 = self.data
+
+        # Дерево категорий (например, oc_category)
+        categories = category_artifact.data
+
+        # Шаг 1. Строим граф дочерних связей для каждого товара: Товар -> Дочерняя категория -> Её Родитель
+        child_categories_with_parents = ptc2.join(
+            categories.select([category_artifact.pk_name, parent_id_col]),
+            left_on=category_id_col,
+            right_on=category_artifact.pk_name,
+            how="inner"
+        ).select([
+            pl.col(product_id_col).alias("child_product_id"),
+            pl.col(parent_id_col).alias("child_parent_category_id")
+        ])
+
+        # Шаг 2. Выполняем Anti-Join (аналог NOT EXISTS).
+        # Убираем строку из ptc1, если товар совпал, а категория в ptc1 является родителем для какой-то другой категории этого же товара
+        reduced_lazy = ptc1.join(
+            child_categories_with_parents,
+            left_on=[product_id_col, category_id_col],
+            right_on=["child_product_id", "child_parent_category_id"],
+            how="anti"
+        )
+
+        # Шаг 3. Инициализируем новый артефакт с обновленным графом ленивых вычислений
+        new_artifact = self.__class__(self.path)
+        object.__setattr__(new_artifact, "data", reduced_lazy)
+
+        return new_artifact

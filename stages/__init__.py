@@ -5,12 +5,14 @@ from .integrity.check_integrity import CheckIntegrityStage
 from .deduplicate.deduplicate import DeduplicateStage
 from .load.load import LoadStage
 from .s3_upload.s3_upload import S3ImageUploadStage
+from .reduce.reduce import ReduceStage
 
 # Экспортируем классы для внешнего использования
 __all__ = [
     "ExtractTableStage",
     "NormalizeValuesStage",
     "DeduplicateStage",
+    "ReduceStage",
     "JoinTablesStage",
     "CheckIntegrityStage",
     "LoadStage",

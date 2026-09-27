@@ -5,6 +5,7 @@ from related_schemas.category import (
     CATEGORY_SCHEMA,
     CATEGORY_DESCRIPTION_SCHEMA,
     CATEGORY_PATH_SCHEMA,
+    PRODUCT_TO_CATEGORY
 )
 from related_schemas.product import (
     PRODUCT_SCHEMA,
@@ -91,6 +92,7 @@ class OpenCartSchema:
             "oc_category": CATEGORY_SCHEMA,
             "oc_category_path": CATEGORY_PATH_SCHEMA,
             "oc_category_description": MutableSchema(CATEGORY_DESCRIPTION_SCHEMA),
+            "oc_product_to_category": PRODUCT_TO_CATEGORY,
         }
 
         if single_language:
