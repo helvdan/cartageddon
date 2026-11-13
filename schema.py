@@ -17,6 +17,16 @@ from related_schemas.product import (
     MANUFACTURER_SCHEMA,
     REVIEW_SCHEMA
 )
+from related_schemas.order import (
+    CART_SCHEMA,
+    ORDER_SCHEMA,
+    ORDER_SIMPLE_FIELDS_SCHEMA,
+    ORDER_HISTORY_SCHEMA,
+    ORDER_PRODUCT_SCHEMA,
+    ORDER_OPTION_SCHEMA,
+    ORDER_STATUS_SCHEMA,
+    ORDER_TOTAL_SCHEMA,
+)
 
 
 class MissingTableError(KeyError):
@@ -93,12 +103,21 @@ class OpenCartSchema:
             "oc_category_path": CATEGORY_PATH_SCHEMA,
             "oc_category_description": MutableSchema(CATEGORY_DESCRIPTION_SCHEMA),
             "oc_product_to_category": PRODUCT_TO_CATEGORY,
+            "oc_cart": CART_SCHEMA,
+            "oc_order": ORDER_SCHEMA,
+            "oc_order_simple_fields": ORDER_SIMPLE_FIELDS_SCHEMA,
+            "oc_order_status": MutableSchema(ORDER_STATUS_SCHEMA),
+            "oc_order_history": ORDER_HISTORY_SCHEMA,
+            "oc_order_product": ORDER_PRODUCT_SCHEMA,
+            "oc_order_option": ORDER_OPTION_SCHEMA,
+            "oc_order_total": ORDER_TOTAL_SCHEMA,
         }
 
         if single_language:
             self._schema.pop('oc_language', None)
             self._schema['oc_product_description'].add_metadata(join_to='oc_product').remove_field('language_id')
             self._schema['oc_category_description'].add_metadata(join_to='oc_category').remove_field('language_id')
+            self._schema['oc_order_status'].remove_field('language_id')
 
         self.oc_tables = set(self._schema)
 

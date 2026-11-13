@@ -12,6 +12,7 @@ from stages import (
     ExtractTableStage,
     NormalizeValuesStage,
     DeduplicateStage,
+    ReduceStage,
     CheckIntegrityStage,
     JoinTablesStage,
     LoadStage,
@@ -29,14 +30,16 @@ class Pipeline:
     # Стадии спроектированы и оптимизированы под запуск в этом порядке,
     # но могут быть пропущены при определенных условиях
     STAGES_ORDER = (
-        ExtractTableStage,
-        NormalizeValuesStage,
-        DeduplicateStage,
-        CheckIntegrityStage,
-        JoinTablesStage,
+        ExtractTableStage,  # извлечение сырых данных из БД Open Cart
+        NormalizeValuesStage,  # нормализация значений и сохранение в формает pyarrow
+        DeduplicateStage,  # дедубликация по определенному признаку (задвоенные отзывы)
+        ReduceStage,  # удаление избыточных связей Many-to-Many (отвязываем товар от родительских категорий)
+        CheckIntegrityStage,  # удаление внешних ключей, которые ссылаются на несуществующие id
+        JoinTablesStage,  # объединение избыточных таблиц (таблица товара и таблица описания товара)
+        # LoadStage
         (
-            LoadStage,
-            S3ImageUploadStage
+            LoadStage,  # загрузка в Postgres
+            S3ImageUploadStage  # загрузка в S3
         )
     )
 
