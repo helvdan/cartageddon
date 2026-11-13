@@ -1,5 +1,6 @@
 import html as html_lib
 import json
+from datetime import date, datetime
 from functools import partial
 from typing import Callable
 
@@ -20,6 +21,20 @@ def normalize_date(value):
     return value
 
 
+def parse_delivery_date(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+
+    value = value.strip()
+    if value in ("", "0000-00-00"):
+        return None
+    return date.fromisoformat(value)
+
+
 def value_to_none(value, gauge):
     if value == gauge:
         return None
@@ -34,6 +49,7 @@ TRANSFORM_REGISTRY = {
     "to_html": to_html,
     "zero_to_none": zero_to_none,
     "normalize_date": normalize_date,
+    "parse_delivery_date": parse_delivery_date,
     "value_to_none": value_to_none,
     "int_to_bool": int_to_bool,
 }
